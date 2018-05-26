@@ -1,0 +1,213 @@
+---
+title: "Visualization of Temperature Distribution of Australian Major Cities"
+subtitle: Interactive Storytelling
+author: "Niranjan Adhikari"
+output:
+  html_document: default
+  html_notebook: default
+  pdf_document: default
+---
+
+
+## Introduction 
+
+Global warming or radially increasing temperature of the earth surface throughout the time are major concerns of these days. I found the story "The reality of living with 50 degree celsius temperatures in our major cities"
+by Liz Hanna in Conversation [website](https://theconversation.com/the-reality-of-living-with-50-temperatures-in-our-major-cities-85315)
+The article is based on the [research](http://onlinelibrary.wiley.com/doi/10.1002/2017GL074612/abstract;jsessionid=ADB675592F11E966DD05BBD2BD90055B.f02t04) of predicting the temperature of Sydney and Melbourne by the 2040s. Author also refered the [paper](http://onlinelibrary.wiley.com/doi/10.1002/2015GL065793/abstract) "Dramatically increased rate of observed hot record breaking in recent Australian temperatures"
+
+The article logically explained the effect of the dramatical increasing temperature trend, however, the author could not explain the trend of the temperature in the past. It is believed that this visualization will help the reader to get more insight into the story. 
+
+
+## Soure of data sets  
+
+The data set of monthly mean maximum temperature series of major citeis of Australia such as Melbourne, Sydney, Darwin, Perth, and Adelaide 
+between January 1971 and August 2017 retrived form the Australian Burearu of Metrology
+[(ABM)](http://www.bom.gov.au/climate/data/) or from [here](http://www.bom.gov.au/climate/data/stations/).
+
+
+## Interactive visualization
+
+The following code of chunk has been used to run the data file and visualised using ggplot2() and plotly() package
+
+<P style="page-break-before: always">
+
+### Required Libraries 
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(plotly)
+library(dplyr)
+```
+
+### Data Preprocessing 
+
+Loading data in to R
+
+```{r,warning=FALSE}
+Melbourne = read.csv("data/meanMaxTempMel.csv", header= FALSE)
+
+meanMaxTempSyd = read.csv("data/meanMaxTempSyd.csv", header= FALSE)
+Sydney = stack(as.data.frame(t(meanMaxTempSyd)))
+Sydney <- na.omit(Sydney)
+Sydney <- Sydney[1]
+
+meanMaxTempPerth = read.csv("data/meanMaxTempPerth.csv", header= FALSE)
+Perth = stack(as.data.frame(t(meanMaxTempPerth)))
+Perth <- na.omit(Perth)
+Perth <- Perth[1] 
+
+meanMaxTempDarwin = read.csv("data/meanMaxTempDarwin.csv", header= FALSE)
+Darwin = stack(as.data.frame(t(meanMaxTempDarwin)))
+Darwin <- na.omit(Darwin)
+Darwin <- Darwin[1] 
+
+meanMaxTempAdel = read.csv("data/meanMaxTempAdel.csv", header= FALSE)
+Adelaide = stack(as.data.frame(t(meanMaxTempAdel)))
+Adelaide <- na.omit(Adelaide)
+Adelaide <- Adelaide[1] 
+
+temp_data <- as.data.frame(list(Melbourne, Sydney, Perth, Darwin, Adelaide))
+colnames(temp_data) <- c("Melbourne", "Sydney", "Perth", "Darwin","Adelaide")
+
+## Create date from Jan 1971 to Aug 2017
+Date = seq(from = as.Date("1971-01-01"), to = as.Date("2017-08-03"), by = 'month')
+
+temp_data$Date <- Date
+
+# View(temp_data)
+
+```
+
+<P style="page-break-before: always">
+
+### First visualization 
+
+In this visualization, we can plot the selected city temperature using the indicator variable menu at the top left part of the plot. While moving the closer throughout the plot, the name of the city along with the full date and temperature value can be read. 
+
+```{r, warning=FALSE}
+## Adding update indicator variable menu
+updatemenus <- list(
+  list(
+    active = 0,
+    x = -.125,
+    type= 'buttons',
+    buttons = list(
+      list(
+        label = "Melbourne",
+        method = "update",
+        args = list(list(visible = c(TRUE, "legendonly", "legendonly", 
+                                     "legendonly", "legendonly" )))),
+      list(
+        label = "Sydney",
+        method = "update",
+        args = list(list(visible = c("legendonly", TRUE, "legendonly", 
+                                     "legendonly", "legendonly")))),
+      list(
+        label = "Perth",
+        method = "update",
+        args = list(list(visible = c("legendonly", "legendonly", TRUE, 
+                                     "legendonly", "legendonly")))),
+      list(
+        label = "Darwin",
+        method = "update",
+        args = list(list(visible = c("legendonly", "legendonly", "legendonly", 
+                                     TRUE, "legendonly")))),      
+      list(
+        label = "Adelaide",
+        method = "update",
+        args = list(list(visible = c("legendonly", "legendonly", "legendonly", 
+                                     "legendonly", TRUE))))
+    )
+  )
+)
+
+```
+
+<P style="page-break-before: always">
+
+```{r, warning=FALSE}
+p1 <- plot_ly(data = temp_data) %>% 
+  
+  add_lines(x=~Date, y=~Melbourne, name = "Melbourne") %>%
+  add_lines(x=~Date, y=~Sydney, name = "Sydney", visible = "legendonly") %>%
+  add_lines(x=~Date, y=~Perth, name = "Perth", visible = "legendonly") %>%
+  add_lines(x=~Date, y=~Darwin, name = "Darwin", visible = "legendonly") %>%
+  add_lines(x=~Date, y=~Adelaide, name = "Adelaide", visible = "legendonly") %>%
+  
+  layout(title = "Australian Major Cities Temperature Time Series", showlegend=FALSE,
+         xaxis=list(zeroline = FALSE,title="Date"),
+         yaxis=list(zeroline = FALSE,title="Temperature (Celsius)"),
+         updatemenus=updatemenus)
+p1
+```
+
+<P style="page-break-before: always">
+
+### Second visualization 
+
+After inserting the range slider, we can rapidly drill down on the particular time period. Note: This effect is achieved by adding "rangeslider = list(type = "date")" in the x-asis layout of the first visualization. 
+
+```{r, message=FALSE}
+p2 <- plot_ly(data = temp_data) %>% 
+  
+  add_lines(x=~Date, y=~Melbourne, name = "Melbourne", visible = "legendonly") %>%
+  add_lines(x=~Date, y=~Sydney, name = "Sydney", visible = "legendonly") %>%
+  add_lines(x=~Date, y=~Perth, name = "Perth", visible = "legendonly") %>%
+  add_lines(x=~Date, y=~Darwin, name = "Darwin") %>%
+  add_lines(x=~Date, y=~Adelaide, name = "Adelaide", visible = "legendonly") %>%
+  
+  layout(title = "Australian Major Cities Temperature Time Series", showlegend=FALSE,
+         xaxis=list(zeroline = FALSE,title="Date", rangeslider =                               list(type = "date")),
+         yaxis=list(zeroline = FALSE,title="Temperature (Celsius)"),
+         updatemenus=updatemenus)
+
+p2
+```
+
+<P style="page-break-before: always">
+
+### Third visualization
+
+This visualization demonstrates the all five cities tempearture in a single plot where interactive play can achieve from legend line as well. 
+
+```{r, warning=FALSE}
+p3 <- plot_ly(data = temp_data,  x= ~Date, y = ~Melbourne, name = 'Melbourne', type = 'scatter',mode = 'lines',
+              line = list(color = 'red', width = 1)) %>% 
+  add_trace(x=~Date, y=~Sydney, name = "Sydney", line = list(color = 'blue', width = 1)) %>%
+  add_lines(x=~Date, y=~Perth, name = "Perth", line = list(color = 'brown', width = 1)) %>%
+  add_lines(x=~Date, y=~Darwin, name = "Darwin", line = list(color = 'black', width = 1)) %>%
+  add_lines(x=~Date, y=~Adelaide, name = "Adelaide", line = list(color = 'darkorchid4', width = 1)) %>%
+  
+  layout(title = "Australian Major Cities Temperature Time Series", 
+         xaxis=list(zeroline = FALSE,title="Date"),    
+         yaxis=list(zeroline = FALSE,title="Temperature (Celsius)"))
+
+p3 
+
+```
+
+Although the composite visualization looks like crap, it eases to compare among the five cities. The mean level of the highest temperature of Darwin is sitting on the top while that of Melbourne is at the bottom. Moreover, the interval of fluctuation Darwin is narrow while the Melbourne, Perth, and Adelaide are very wide. The mean level of Sydney's temperature is sitting in the middle of the interval of all cities. According to the article of conversation website, if the rate of increase in temperature is equal for all cities then lives of Darwin and Perth will be severely affected. 
+
+<P style="page-break-before: always">
+
+## Summary
+
+The main idea of the study is to strengthen the article by providing the supplementary information using the data visualization. The article fails to provide the sufficient information about the current and past trend of the temperature distribution of the major cities. 
+
+From the visualization of highest temperature distribution, Darwin have serious increasing trend while Adelaide and Sydney have comparatively lower increasing trend than Darwin. Melbourne and Perth have relatively lowerest increasing trend throughout the time. 
+
+The interactive visualization demonstrated above sufficiently help to explore the insights about the temperature distribution. It is believed that this visualization helps to attracts the more readers by providing the sufficient information of statistical information. 
+
+
+## Acknowledgement 
+
+I would like to express sincere gratitude towards Dr. James Baglin, program coordinator of Masters of Analytics and senior lecturer at RMIT University. This is a great fortune to be his student in his data visualization lecture. I must acknowledge the Dr. Haydar Demrihin, the lecturer at RMIT University for his support to retrieve the time series data sets.
+
+## References
+
+The Conversation. (2017). The reality of living with 50 degree celsius temperatures in our major cities. [online] Available at: https://theconversation.com/the-reality-of-living-with-50-temperatures-in-our-major-cities-85315 [Accessed 01 Oct. 2017].
+
+Bom.gov.au. (2017). Climate Data Online. [online] Available at: http://www.bom.gov.au/climate/data/ [Accessed 01 Oct. 2017].
+
+Plot.ly. (2017). Line Plots. [online] Available at: https://plot.ly/r/line-charts/ [Accessed 10 Oct. 2017].
+
