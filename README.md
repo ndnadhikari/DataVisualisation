@@ -14,5 +14,8 @@ http://rpubs.com/nrnjn_adhikari/392328
 **Version 2**
 http://rpubs.com/nrnjn_adhikari/392327
 
+## Please follow the link below for shiny app visualization
+https://github.com/ndnadhikari/shinyapp
+
 ## Acknowledgement 
 I would like to give my sincere gratitude towards my lecturer Dr. James Baglin from RMIT University for his incredible support and great insights of data visualization course. 
